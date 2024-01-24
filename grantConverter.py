@@ -3,12 +3,14 @@ import requests
 from bs4 import BeautifulSoup
 from openai import OpenAI
 import os
+import time
 
 # Hardcode your API key here
-api_key = "your_api_key_here"
+api_key = ""
 
 # Initialize the OpenAI client with the hardcoded API key
 client = OpenAI(api_key=api_key)
+
 
 def scrape_website(url):
     try:
@@ -23,10 +25,8 @@ def scrape_website(url):
         print(f"Error during website scraping: {e}")
         return None
 
-def process_text(client):
-    with open('raw.txt', 'r') as file:
-        raw_text = file.read()
 
+def process_text(client, raw_text):
     message = ''
 
     # Open the file and read the content
@@ -35,7 +35,7 @@ def process_text(client):
 
     try:
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=[
                 {
                     "role": "system",
@@ -52,36 +52,45 @@ def process_text(client):
 
         try:
             json_data = json.loads(output_message)
-            title = json_data.get('title', 'grant_data').replace('/', '_')  # Replace '/' in title to avoid file path issues
+            # Extracting title from JSON for the file name
+            title = json_data.get('title', 'grant_data').replace('/', '_')
             file_name = f"{title}.txt"
             with open(file_name, 'w') as file:
                 json.dump(json_data, file, indent=4)
+            print(f"Output saved to {file_name}")
         except json.JSONDecodeError:
             file_name = "grant_data.txt"
             with open(file_name, 'w') as file:
                 file.write(output_message)
+            print(f"Output saved to {file_name}")
 
-        print(f"Output saved to {file_name}")
         os.remove('raw.txt')
 
     except Exception as e:
         print(f"An error occurred while processing the text: {e}")
+
 
 def main():
     choice = input("Do you want to use a single URL or a list from a file? Enter 'URL' or 'list': ").strip().lower()
 
     if choice == 'url':
         url = input("Enter the URL to scrape: ").strip()
-        if scrape_website(url):
-            process_text(client)
+        raw_text = scrape_website(url)
+        if raw_text:
+            print("Processing...", end="")
+            process_text(client, raw_text)
     elif choice == 'list':
         file_path = input("Enter the file path of the list: ").strip()
         try:
             with open(file_path, 'r') as file:
                 for line in file:
                     url = line.strip()
-                    if url and scrape_website(url):
-                        process_text(client)
+                    if url:
+                        print(f"Processing URL: {url} ...", end="")
+                        raw_text = scrape_website(url)
+                        if raw_text:
+                            process_text(client, raw_text)
+                        time.sleep(2)  # Wait for 2 seconds before processing the next URL
         except FileNotFoundError:
             print("File not found. Please check the path and try again.")
     else:
