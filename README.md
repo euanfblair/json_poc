@@ -1,6 +1,3 @@
-Certainly! Below is a README template for your Python script which scrapes websites and processes text using OpenAI's GPT-4. This template includes sections for the script's purpose, setup instructions, usage guide, and requirements. You may need to adjust it based on your specific environment or additional features of your script.
-Web Scraping and Text Processing with OpenAI
-Description
 
 This Python script is designed to scrape text content from websites and process it using OpenAI's GPT-4 model. The script supports scraping from a single URL or multiple URLs listed in a file. It then processes the scraped content with OpenAI's GPT-4 to generate structured output.
 Setup
